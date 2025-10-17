@@ -1241,10 +1241,13 @@ public:
                 break;
 
             case GT_CAST:
+            {
                 assert(TopValue(1).Node() == node);
                 assert(TopValue(0).Node() == node->AsCast()->CastOp());
 
-                if (!node->TypeIs(TYP_I_IMPL, TYP_BYREF) || node->gtOverflow() || !TopValue(0).IsAddress() ||
+                var_types castToType = node->CastToType();
+                bool isPtrCast = (castToType == TYP_I_IMPL) || (castToType == TYP_U_IMPL) || (castToType == TYP_BYREF);
+                if (!isPtrCast || node->gtOverflow() || !TopValue(0).IsAddress() ||
                     !TopValue(1).AddOffset(TopValue(0), 0))
                 {
                     EscapeValue(TopValue(0), node);
@@ -1252,7 +1255,7 @@ public:
 
                 PopValue();
                 break;
-
+            }
             case GT_CALL:
                 while (TopValue(0).Node() != node)
                 {
@@ -2017,7 +2020,7 @@ private:
                 }
 
                 if ((genTypeSize(indir) == genTypeSize(varDsc)) && (genTypeSize(indir) <= TARGET_POINTER_SIZE) &&
-                    (varTypeIsFloating(indir) || varTypeIsFloating(varDsc)))
+                    (varTypeIsFloating(indir) || varTypeIsFloating(varDsc)) && !varDsc->lvPromoted)
                 {
                     return IndirTransform::BitCast;
                 }
@@ -2353,8 +2356,9 @@ private:
 };
 
 //------------------------------------------------------------------------
-// fgMarkAddressExposedLocals: Traverses the entire method and marks address
-//    exposed locals.
+// fgLocalMorph:
+//   Traverses the entire method and simplifies local accesses.
+//   Also marks locals that are address exposed.
 //
 // Returns:
 //    Suitable phase status
@@ -2364,7 +2368,7 @@ private:
 //    to just LCL_VAR, do not result in the involved local being marked
 //    address exposed.
 //
-PhaseStatus Compiler::fgMarkAddressExposedLocals()
+PhaseStatus Compiler::fgLocalMorph()
 {
     bool madeChanges = false;
 

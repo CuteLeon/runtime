@@ -2404,11 +2404,11 @@ public:
             int*                  offset
             ) = 0;
 
-    virtual size_t getClassStaticDynamicInfo (
+    virtual void* getClassStaticDynamicInfo (
             CORINFO_CLASS_HANDLE    cls
             ) = 0;
 
-    virtual size_t getClassThreadStaticDynamicInfo (
+    virtual void* getClassThreadStaticDynamicInfo (
             CORINFO_CLASS_HANDLE    cls
             ) = 0;
 
@@ -3206,12 +3206,6 @@ public:
             void**              ppIndirection = NULL
             ) = 0;
 
-    // returns true if a VM cookie can be generated for it (might be false due to cross-module
-    // inlining, in which case the inlining should be aborted)
-    virtual bool canGetCookieForPInvokeCalliSig(
-            CORINFO_SIG_INFO*   szMetaSig
-            ) = 0;
-
     // Generate a cookie based on the signature to pass to INTOP_CALLI in the interpreter.
     virtual void* GetCookieForInterpreterCalliSig(
             CORINFO_SIG_INFO*   szMetaSig) = 0;
@@ -3297,13 +3291,8 @@ public:
     // registers a vararg sig & returns a VM cookie for it (which can contain other stuff)
     virtual CORINFO_VARARGS_HANDLE getVarArgsHandle(
             CORINFO_SIG_INFO       *pSig,
+            CORINFO_METHOD_HANDLE   methHnd,
             void                  **ppIndirection = NULL
-            ) = 0;
-
-    // returns true if a VM cookie can be generated for it (might be false due to cross-module
-    // inlining, in which case the inlining should be aborted)
-    virtual bool canGetVarArgsHandle(
-            CORINFO_SIG_INFO       *pSig
             ) = 0;
 
     // Allocate a string literal on the heap and return a handle to it
